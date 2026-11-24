@@ -16,3 +16,4 @@ artifacts/reports/*
 
 .pytest_cache/
 site/
+*.zip
