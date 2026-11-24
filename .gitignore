@@ -1,0 +1,18 @@
+.env
+*.pyc
+__pycache__/
+.pytest_cache/
+.venv/
+venv/
+# generated (reproducible with: python -m retailpulse.cli run-all)
+data/
+artifacts/*
+!artifacts/reports/
+artifacts/reports/*
+!artifacts/reports/RESULTS.md
+!artifacts/reports/*.png
+*.db
+*.pt
+
+.pytest_cache/
+site/

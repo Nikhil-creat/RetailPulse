@@ -1,0 +1,24 @@
+services:
+  api:
+    build: .
+    ports:
+      - "127.0.0.1:8000:8000"        # localhost only; put a TLS reverse proxy in front for real use
+    environment:
+      RP_ENV: prod
+      RP_API_KEYS: ${RP_API_KEYS:?Set RP_API_KEYS in .env (python -m retailpulse.cli make-key)}
+      ANTHROPIC_API_KEY: ${ANTHROPIC_API_KEY:-}
+      RP_RATE_LIMIT_PER_MIN: ${RP_RATE_LIMIT_PER_MIN:-60}
+    volumes:
+      - rp_data:/app/data
+      - rp_artifacts:/app/artifacts
+    read_only: true
+    tmpfs:
+      - /tmp
+    cap_drop: [ALL]
+    security_opt:
+      - no-new-privileges:true
+    restart: unless-stopped
+
+volumes:
+  rp_data:
+  rp_artifacts:
