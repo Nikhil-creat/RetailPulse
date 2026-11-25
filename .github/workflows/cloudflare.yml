@@ -28,7 +28,7 @@ jobs:
       CF_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
       CF_ACCOUNT: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
       - name: Require SITE_URL
         run: |
           if [ -z "$SITE_URL" ]; then echo "Set repository variable SITE_URL (your real public address) - canonicals and sitemap depend on it."; exit 1; fi
