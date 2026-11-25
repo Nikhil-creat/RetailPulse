@@ -1,4 +1,4 @@
-name: Deploy live demo (GitHub Pages)
+name: Deploy demo to GitHub Pages
 
 on:
   push:
@@ -14,6 +14,12 @@ concurrency:
   group: pages
   cancel-in-progress: true
 
+env:
+  # Canonical URL written into <link rel="canonical">, the sitemap and social tags.
+  # Leave the repository variable SITE_URL unset to canonicalise to this GitHub Pages copy; set it to your
+  # primary domain (for example the Cloudflare one) and this copy will point search engines there instead.
+  SITE_URL: ${{ vars.SITE_URL || 'https://nikhil-creat.github.io/RetailPulse' }}
+
 jobs:
   build:
     runs-on: ubuntu-latest
@@ -26,8 +32,8 @@ jobs:
       - run: pip install -r requirements.txt
       - name: Build the warehouse and models (synthetic data, seed 42)
         run: python -m retailpulse.cli run-all
-      - name: Export the static demo
-        run: python -m retailpulse.cli export-static --out site
+      - name: Export the static site (served under /RetailPulse on GitHub Pages)
+        run: python -m retailpulse.cli export-static --out site --site-url "$SITE_URL" --base-path /RetailPulse
       - uses: actions/configure-pages@v5
       - uses: actions/upload-pages-artifact@v3
         with:

@@ -3,70 +3,67 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-  <title>RetailPulse · Retail analytics + guarded AI</title>
-  <meta name="description" content="RetailPulse: SQL star-schema warehouse, forecasting, churn, RAG assistant, guarded agent and image classifier. Synthetic data.">
+  <title>{{TITLE}}</title>
+  <meta name="description" content="{{DESCRIPTION}}">
+  <meta name="robots" content="{{ROBOTS}}">
+  <meta name="author" content="Nikhil Chary Sriramoju">
   <meta name="theme-color" content="#2a78d6">
-  <link rel="manifest" href="manifest.webmanifest">
-  <link rel="icon" href="icons/icon.svg" type="image/svg+xml">
-  <link rel="apple-touch-icon" href="icons/icon-192.png">
-  <link rel="stylesheet" href="css/app.css">
+  <meta name="color-scheme" content="light dark">
+  <meta name="rp-mode" content="{{MODE}}">
+  <meta name="rp-page" content="{{PAGE_KEY}}">
+  {{CSP_META}}
+  {{HEAD_META}}
+  <link rel="manifest" href="{{BASE}}/manifest.webmanifest">
+  <link rel="icon" href="{{BASE}}/favicon.ico" sizes="48x48">
+  <link rel="icon" href="{{BASE}}/icons/icon.svg" type="image/svg+xml" sizes="any">
+  <link rel="apple-touch-icon" href="{{BASE}}/icons/icon-192.png">
+  <link rel="stylesheet" href="{{BASE}}/css/app.css">
+  {{JSONLD}}
 </head>
 <body>
   <a class="skip" href="#main">Skip to content</a>
 
   <header class="app-header">
     <div class="bar">
-      <a class="brand" href="#/" aria-label="RetailPulse home">
-        <img src="icons/icon.svg" alt="" width="30" height="30">
-        <span>RetailPulse</span><span class="ver" id="ver">v2</span>
+      <a class="brand" href="{{BASE}}/" aria-label="RetailPulse home">
+        <img src="{{BASE}}/icons/icon.svg" alt="" width="30" height="30">
+        <span>RetailPulse</span><span class="ver" id="ver">v{{VERSION}}</span>
       </a>
       <span class="spacer"></span>
       <div class="tools">
-        <span class="badge" id="mode-badge" title="Backend mode">…</span>
+        <span class="badge" id="mode-badge" title="Backend mode">Loading</span>
         <span class="badge role" id="role-badge" hidden></span>
         <button class="icon-btn" id="key-btn" type="button" hidden aria-haspopup="dialog">🔑 <span>API key</span></button>
         <button class="icon-btn" id="theme-btn" type="button" aria-label="Toggle colour theme">☾</button>
       </div>
     </div>
     <nav class="nav" id="nav" aria-label="Primary">
-      <a href="#/" data-route="overview">Overview</a>
-      <a href="#/customers" data-route="customers">Customers</a>
-      <a href="#/forecast" data-route="forecast">Forecast</a>
-      <a href="#/assistant" data-route="assistant">Assistant</a>
-      <a href="#/explorer" data-route="explorer">Explorer</a>
-      <a href="#/vision" data-route="vision">Vision</a>
-      <a href="#/trust" data-route="trust">Trust &amp; MLOps</a>
-      <a href="#/api" data-route="api">API</a>
-      <a href="#/about" data-route="about">About</a>
+      {{NAV}}
     </nav>
   </header>
 
-  <main id="main" tabindex="-1" aria-live="polite"></main>
+  <nav class="crumbs" id="crumbs" aria-label="Breadcrumb"{{CRUMBS_HIDDEN}}>{{CRUMBS}}</nav>
+
+  <main id="main" tabindex="-1">{{MAIN}}</main>
 
   <footer class="app-footer">
     <div class="foot">
       <div>
-        <h4>RetailPulse</h4>
+        <p class="foot-title">RetailPulse</p>
         <p>Retail analytics and guarded AI over a SQL star schema: forecasting, churn, RAG, a tool-using agent and an image classifier.</p>
         <p><span class="dot-status" id="st-service"></span><span id="st-service-text">Checking service…</span><br>
            <span class="dot-status" id="st-audit"></span><span id="st-audit-text">Audit chain: n/a</span></p>
       </div>
       <div>
-        <h4>Product</h4>
-        <ul>
-          <li><a href="#/">Overview</a></li><li><a href="#/customers">Customers</a></li>
-          <li><a href="#/forecast">Forecast</a></li><li><a href="#/assistant">Assistant</a></li>
-        </ul>
+        <p class="foot-title">Product</p>
+        <ul>{{FOOT_PRODUCT}}</ul>
       </div>
       <div>
-        <h4>Trust</h4>
-        <ul>
-          <li><a href="#/trust">Security &amp; MLOps</a></li><li><a href="#/api">API reference</a></li>
-          <li><a href="#/about">Limitations</a></li><li><a href="https://github.com/Nikhil-creat/RetailPulse/blob/main/SECURITY.md" rel="noopener noreferrer">SECURITY.md</a></li>
-        </ul>
+        <p class="foot-title">Trust</p>
+        <ul>{{FOOT_TRUST}}<li><a href="https://github.com/Nikhil-creat/RetailPulse/blob/main/SECURITY.md" rel="noopener noreferrer">SECURITY.md</a></li></ul>
       </div>
       <div>
-        <h4>Built by</h4>
+        <p class="foot-title">Built by</p>
         <ul>
           <li>Nikhil Chary Sriramoju</li>
           <li><a href="https://github.com/Nikhil-creat/RetailPulse" rel="noopener noreferrer">GitHub repository</a></li>
@@ -75,7 +72,7 @@
       </div>
     </div>
     <div class="foot-base">
-      <span>© 2026 Nikhil Chary Sriramoju · MIT License</span>
+      <span>© {{YEAR}} Nikhil Chary Sriramoju · MIT License</span>
       <span>Synthetic data (seed 42). Not business advice.</span>
     </div>
   </footer>
@@ -95,7 +92,7 @@
     </form>
   </dialog>
 
-  <noscript><p style="padding:16px">RetailPulse's web app needs JavaScript. The REST API still works without it (see /openapi.json).</p></noscript>
-  <script type="module" src="js/main.js"></script>
+  <noscript><p style="padding:16px">RetailPulse's web app needs JavaScript. The REST API still works without it (see the API reference page).</p></noscript>
+  <script type="module" src="{{BASE}}/js/main.js"></script>
 </body>
 </html>

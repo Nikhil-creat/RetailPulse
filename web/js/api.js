@@ -2,6 +2,12 @@
 // The API key lives in sessionStorage only (cleared when the tab closes) and is sent as a Bearer token.
 import { sleep } from './util.js';
 
+// Root of the site ("/" or "/RetailPulse/" on GitHub Pages), derived from this module's own URL so every
+// request works from any page path.
+export const ROOT = new URL('../', import.meta.url).pathname;
+const IS_STATIC = (document.querySelector('meta[name="rp-mode"]') || {}).content === 'static';
+const abs = (p) => (p.startsWith('/') ? p : ROOT + p);
+
 const state = { mode: 'live', health: null, me: null, key: readKey() };
 
 function readKey() {
@@ -25,7 +31,7 @@ async function http(path, { method = 'GET', body, headers = {} } = {}) {
   if (state.key) h.Authorization = `Bearer ${state.key}`;
   let res;
   try {
-    res = await fetch(path, { method, headers: h, body, cache: 'no-store' });
+    res = await fetch(abs(path), { method, headers: h, body, cache: 'no-store' });
   } catch {
     throw new ApiError(0, 'Cannot reach the server.');
   }
@@ -39,7 +45,7 @@ async function http(path, { method = 'GET', body, headers = {} } = {}) {
 }
 
 async function demo(name) {
-  const res = await fetch(`demo/${name}.json`, { cache: 'no-cache' });
+  const res = await fetch(`${ROOT}demo/${name}.json`, { cache: 'no-cache' });
   if (!res.ok) throw new ApiError(404, 'This view is not available in the static demo. Run the backend to try it live.');
   return res.json();
 }
@@ -49,7 +55,9 @@ const jsonPost = (path, payload) => http(path, { method: 'POST', headers: { 'con
 
 export async function boot() {
   try {
-    const r = await fetch('health', { cache: 'no-store' });
+    // The static export is known to have no backend, so do not probe one (a failed probe is a console error).
+    if (IS_STATIC) throw new Error('static site');
+    const r = await fetch(`${ROOT}health`, { cache: 'no-store' });
     if (!r.ok || !(r.headers.get('content-type') || '').includes('json')) throw new Error('not live');
     state.health = await r.json();
     state.mode = 'live';
@@ -128,7 +136,7 @@ export const api = {
     }
     const headers = { 'content-type': 'application/json' };
     if (state.key) headers.Authorization = `Bearer ${state.key}`;
-    const res = await fetch('v1/agent/stream', { method: 'POST', headers, body: JSON.stringify({ question }) });
+    const res = await fetch(`${ROOT}v1/agent/stream`, { method: 'POST', headers, body: JSON.stringify({ question }) });
     if (!res.ok) {
       const data = await res.json().catch(() => null);
       throw new ApiError(res.status, (data && data.error) || res.statusText);

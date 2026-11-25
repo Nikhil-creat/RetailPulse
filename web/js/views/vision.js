@@ -1,4 +1,5 @@
 import { banner, errorBox, meter, pageHead } from '../ui.js';
+import { ROOT } from '../api.js';
 import { clear, el, fmtPct, toast } from '../util.js';
 
 const CLASSES = ['electronics', 'fashion', 'grocery', 'home', 'beauty', 'sports'];
@@ -20,7 +21,7 @@ export async function render(root, { api, mode }) {
   async function classifySample(name, btn) {
     selected && selected.setAttribute('aria-pressed', 'false');
     btn.setAttribute('aria-pressed', 'true'); selected = btn;
-    const src = `samples/${name}.png`;
+    const src = `${ROOT}samples/${name}.png`;
     try {
       const blob = demo ? null : await (await fetch(src)).blob();
       show(await api.classify(blob, name), src);
@@ -29,7 +30,7 @@ export async function render(root, { api, mode }) {
   const gallery = el('div', { class: 'tiles-gallery' });
   CLASSES.forEach((c) => [1, 2].forEach((k) => {
     const name = `${c}_${k}`;
-    const b = el('button', { class: 'sample', type: 'button', 'aria-pressed': 'false', 'aria-label': `Sample tile ${name.replace('_', ' ')}` }, el('img', { src: `samples/${name}.png`, alt: '' }));
+    const b = el('button', { class: 'sample', type: 'button', 'aria-pressed': 'false' }, el('img', { src: `${ROOT}samples/${name}.png`, alt: `Sample product tile ${name.replace('_', ' ')}`, width: 64, height: 64, loading: 'lazy' }));
     b.addEventListener('click', () => classifySample(name, b));
     gallery.appendChild(b);
   }));

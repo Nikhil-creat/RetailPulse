@@ -23,6 +23,12 @@
 | Live/demo adapter in `web/js/api.js` | The same UI serves the real backend and GitHub Pages | Demo only replays pre-computed examples |
 | Static export through the real service | Demo numbers are genuine outputs, not mock data | Needs a pipeline run first |
 | SSE for the agent stream | Steps show as each tool finishes; plain HTTP, proxy-friendly | One-way only |
+| `web/pages.json` as the one source for page metadata | Server-rendered HTML, the router, the sitemap, llms.txt and tests all read it, so titles/URLs cannot drift | One more file to keep honest |
+| Real URLs + full HTML per page, JS takes over after load | Crawlers and link previews see content without running JS; deep links and the back button work; no hash routing | The server must know every page URL (it does, from the same JSON) |
+| `Site(site_url, base_path)` | Canonical host and asset prefix are separate, so one build works on `/RetailPulse/` (GitHub) and on a domain root (Cloudflare) | Two flags to get right |
+| Live server renders pages as `noindex` | A private tool should not be indexed or compete with the public copy | Search engines never see the live app |
+| MCP over stdio with a hand-written JSON-RPC loop | Tiny, dependency-free, fully testable; reuses the service layer so guards and audit apply | Implements only tools (no resources/prompts) |
+| Model router with an injected fetcher | Provider discovery is unit-testable without keys or network | Not exercised against the live APIs here |
 | PSI drift + JSON model registry with gates | Shows MLOps practice without a platform dependency | File-based; not multi-user |
 
 ## Data flow

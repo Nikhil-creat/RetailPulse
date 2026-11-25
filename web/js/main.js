@@ -1,4 +1,4 @@
-import { api, boot, hasKey, health, me, mode, refreshMe, setKey } from './api.js';
+import { ROOT, api, boot, hasKey, health, me, mode, refreshMe, setKey } from './api.js';
 import { $, clear, el, toast } from './util.js';
 import { banner, errorBox, loading } from './ui.js';
 
@@ -75,30 +75,93 @@ function initKeyDialog() {
 }
 
 // ---------------------------------------------------------------- router
-let renderToken = 0;
-function currentRoute() {
-  const raw = (location.hash || '#/').replace(/^#\/?/, '').split('?')[0];
-  return ROUTES[raw || 'overview'] ? raw || 'overview' : null;
+// Real URLs (/demand-forecast/), not hashes. The server (or the static export) returns a full HTML document for
+// every page, so this code only takes over navigation after load. Page metadata lives in pages.json.
+const BASE = ROOT.replace(/\/$/, '');
+let META = null; // pages.json, or null if unavailable
+const trimBase = (p) => (BASE && p.startsWith(BASE) ? p.slice(BASE.length) : p) || '/';
+const normPath = (p) => {
+  let x = trimBase(p).replace(/index\.html$/, '');
+  if (!x.endsWith('/')) x += '/';
+  return x;
+};
+// route key -> path, read from the server-rendered navigation so there is one list of URLs, not two.
+function routePaths() {
+  const map = {};
+  document.querySelectorAll('#nav a[data-route]').forEach((a) => { map[a.dataset.route] = normPath(new URL(a.href, location.href).pathname); });
+  return map;
+}
+function keyForPath(pathname) {
+  const p = normPath(pathname);
+  const hit = Object.entries(routePaths()).find(([, path]) => path === p);
+  return hit ? hit[0] : null;
+}
+const currentKey = () => keyForPath(location.pathname);
+
+async function loadMeta() {
+  try {
+    const r = await fetch(`${ROOT}pages.json`);
+    if (!r.ok) return;
+    const d = await r.json();
+    META = { site: d.site, pages: Object.fromEntries(d.pages.map((p) => [p.key, p])), notFound: d.not_found };
+  } catch { /* optional: navigation still works from the nav links */ }
 }
 
+function setMeta(selector, attr, value) {
+  const n = document.querySelector(selector);
+  if (n && value != null) n.setAttribute(attr, value);
+}
+function updateHead(key, page, fallbackTitle) {
+  document.title = page ? page.title : fallbackTitle;
+  if (!page) return;
+  setMeta('meta[name="description"]', 'content', page.description);
+  const siteRoot = (document.querySelector('meta[name="rp-site"]') || {}).content;
+  if (siteRoot) {
+    const url = siteRoot + page.path;
+    setMeta('link[rel="canonical"]', 'href', url);
+    setMeta('meta[property="og:url"]', 'content', url);
+    setMeta('meta[property="og:image"]', 'content', `${siteRoot}/${page.social}`);
+    setMeta('meta[name="twitter:image"]', 'content', `${siteRoot}/${page.social}`);
+  }
+  setMeta('meta[property="og:title"]', 'content', page.title);
+  setMeta('meta[name="twitter:title"]', 'content', page.title);
+  setMeta('meta[property="og:description"]', 'content', page.description);
+  setMeta('meta[name="twitter:description"]', 'content', page.description);
+  // Structured data was written for the page that was loaded; drop it rather than leave it describing another page.
+  document.querySelectorAll('script[type="application/ld+json"]').forEach((n) => n.remove());
+}
+function updateCrumbs(key, page) {
+  const nav = $('#crumbs');
+  if (!nav) return;
+  clear(nav);
+  nav.hidden = key === 'overview';
+  if (key === 'overview') return;
+  nav.appendChild(el('ol', {}, el('li', {}, el('a', { href: `${BASE}/` }, 'Home')),
+    el('li', { 'aria-current': 'page' }, page ? page.crumb : 'Page not found')));
+}
+
+let renderToken = 0;
 async function render() {
   const root = $('#main');
-  const key = currentRoute();
+  const key = currentKey();
   const token = ++renderToken;
   document.querySelectorAll('#nav a').forEach((a) => {
     if (a.dataset.route === key) a.setAttribute('aria-current', 'page'); else a.removeAttribute('aria-current');
   });
+  const page = META ? (key ? META.pages[key] : META.notFound) : null;
+  updateHead(key, page, key ? `${ROUTES[key][0]} | RetailPulse` : 'Page not found | RetailPulse');
+  updateCrumbs(key || 'not_found', page);
   clear(root);
   if (!key) {
-    root.appendChild(el('div', { class: 'card' }, el('h1', { id: 'page-title', tabindex: '-1' }, 'Page not found'), el('p', {}, 'That page does not exist. '), el('a', { href: '#/' }, 'Go to the overview')));
+    root.appendChild(el('div', { class: 'card' }, el('h1', { id: 'page-title', tabindex: '-1' }, 'Page not found'),
+      el('p', {}, 'That page does not exist or has moved. '), el('a', { href: `${BASE}/` }, 'Go to the overview')));
     return;
   }
   if (mode() === 'offline') {
     root.appendChild(banner('The backend is not reachable and no static demo data was found. Start it with `python -m retailpulse.cli serve` and reload.', 'error', 'Offline'));
     return;
   }
-  const [name, path] = ROUTES[key];
-  document.title = `${name} · RetailPulse`;
+  const [, path] = ROUTES[key];
   root.appendChild(loading('Loading page'));
   try {
     const mod = await import(path);
@@ -116,18 +179,45 @@ async function render() {
   }
 }
 
+// Same-origin links to known pages navigate without a reload; everything else behaves normally.
+function initLinks() {
+  document.addEventListener('click', (e) => {
+    if (e.defaultPrevented || e.button !== 0 || e.metaKey || e.ctrlKey || e.shiftKey || e.altKey) return;
+    const a = e.target.closest ? e.target.closest('a[href]') : null;
+    if (!a || a.target || a.hasAttribute('download')) return;
+    const u = new URL(a.href, location.href);
+    if (u.origin !== location.origin) return;
+    if (u.hash && u.pathname === location.pathname) return; // in-page anchor such as the skip link
+    if (!keyForPath(u.pathname)) return;
+    e.preventDefault();
+    if (normPath(u.pathname) !== normPath(location.pathname)) history.pushState({}, '', u.pathname);
+    render();
+  });
+  window.addEventListener('popstate', render);
+}
+
+// Old bookmarks like /#/forecast keep working.
+function upgradeLegacyHash() {
+  const m = /^#\/([a-z]*)/.exec(location.hash || '');
+  if (!m) return;
+  const target = routePaths()[m[1] || 'overview'];
+  if (target) history.replaceState({}, '', `${BASE}${target}`);
+}
+
 async function main() {
   initTheme();
   initKeyDialog();
-  await boot();
+  await Promise.all([boot(), loadMeta()]);
   paintChrome();
-  window.addEventListener('hashchange', render);
+  upgradeLegacyHash();
+  window.addEventListener('hashchange', () => { upgradeLegacyHash(); render(); });
+  initLinks();
   await render();
   if (mode() === 'live' && health() && health().auth_required && !me()) {
     toast('This server needs an API key. Use the key button in the header.', 'info');
   }
   if ('serviceWorker' in navigator && (location.protocol === 'https:' || ['localhost', '127.0.0.1'].includes(location.hostname))) {
-    navigator.serviceWorker.register('sw.js').catch(() => { /* optional enhancement */ });
+    navigator.serviceWorker.register(`${ROOT}sw.js`).catch(() => { /* optional enhancement */ });
   }
 }
 

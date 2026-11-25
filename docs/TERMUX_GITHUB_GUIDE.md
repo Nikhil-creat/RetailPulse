@@ -2,6 +2,43 @@
 
 Your GitHub: `Nikhil-creat`. Target repo: `https://github.com/Nikhil-creat/RetailPulse`.
 
+## START HERE if you already pushed once (update an existing clone to v3.2.0)
+
+Your GitHub repo already has v2.0.0 plus a v3.0.0 commit (tags `v3.0.0`, `v3.1.0`) that added `src/retailpulse/`.
+That folder shadows the real `retailpulse/` package, which is why the CI badge says **failing**. v3.2.0 removes it and keeps
+the useful ideas inside the real package. Run these in Termux (they keep your `.git` history and replace everything else):
+
+```bash
+cd ~/RetailPulse && test -d .git && echo "in the repo: OK"          # must print OK before continuing
+git pull --rebase origin main
+rm -rf ~/rp_new && mkdir ~/rp_new && unzip -q ~/storage/downloads/RetailPulse.zip -d ~/rp_new
+find . -mindepth 1 -maxdepth 1 ! -name .git -exec rm -rf {} +      # wipes the working tree except .git
+cp -a ~/rp_new/RetailPulse/. .
+git status --short | head -40                                       # expect: src/ deleted, many modified/added
+git ls-files -o -m --exclude-standard | grep -E '(^|/)\.env$|\.db$|\.zip$' || echo "OK: no secrets/DB/zip"
+git add -A
+git commit -m "feat: v3.2.0 real page URLs and SEO, MCP server, Cloudflare deploy; remove shadow src/ package"
+git tag -a v3.2.0 -m "RetailPulse 3.2.0"
+git push origin main --follow-tags
+```
+If the push complains about workflow permission: `gh auth refresh -s workflow` then push again.
+Then watch CI: `gh run list --limit 3` (green is expected; if red, send me the failing step's log).
+
+Email privacy: your commits currently carry your real Gmail address (you set it in `git config`), and it is public in the
+history. To use GitHub's private address from now on: GitHub -> Settings -> Emails -> copy the `ID+Nikhil-creat@users.noreply.github.com`
+address, then `git config --global user.email "<that address>"`. Old commits keep the old address unless you rewrite history
+(not needed unless you mind). The token you typed first (the one rejected for `read:org`) is still a live token if it was
+created: delete it at GitHub -> Settings -> Developer settings -> Personal access tokens.
+
+Deploy on Cloudflare after that: see **docs/DEPLOY_CLOUDFLARE.md**. The short version for the phone:
+```bash
+gh variable set SITE_URL --body "https://retailpulse.pages.dev"   # replace with your real address later
+```
+then Cloudflare dashboard -> Workers & Pages -> Create -> Pages -> Connect to Git -> RetailPulse (build command and output
+folder are in that guide).
+
+---
+
 You do **not** need to run the project on your phone to publish it. Pushing is just git. GitHub Actions will run the tests for you.
 
 ## 0. Prerequisites
@@ -86,9 +123,9 @@ git push -u origin main
 
 ## 7. Release, live demo, topics
 ```bash
-git tag -a v2.0.0 -m "RetailPulse 2.0: web app, roles, MLOps, static demo"
-git push origin v2.0.0
-gh release create v2.0.0 --title "RetailPulse 2.0" --notes-file CHANGELOG.md
+git tag -a v3.2.0 -m "RetailPulse 3.2.0"          # skip if you already tagged in the START HERE section
+git push origin v3.2.0
+gh release create v3.2.0 --title "RetailPulse 3.2.0" --notes-file CHANGELOG.md
 ```
 Turn on the live demo (GitHub Pages built by `.github/workflows/pages.yml`):
 ```bash

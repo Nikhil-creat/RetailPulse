@@ -3,6 +3,7 @@ from __future__ import annotations
 
 import argparse
 import json
+import os
 import sys
 
 from .config import Paths
@@ -32,8 +33,13 @@ def main(argv=None) -> int:
     k.add_argument("--role", default="analyst", choices=["viewer", "analyst", "admin"])
     sub.add_parser("verify-audit", help="verify the tamper-evident audit log")
     sub.add_parser("eval", help="run RAG + agent evaluation suites")
+    sub.add_parser("mcp", help="run the read-only MCP server on stdio (for IDE / assistant clients)")
+    sub.add_parser("models", help="list hosted LLMs available through GROQ_API_KEY / GEMINI_API_KEY (optional)")
     e = sub.add_parser("export-static", help="export a static read-only demo (GitHub Pages) from the real pipeline outputs")
     e.add_argument("--out", default="site")
+    e.add_argument("--site-url", default=os.environ.get("RP_SITE_URL"), help="public URL used in canonical tags and the sitemap")
+    e.add_argument("--base-path", default=os.environ.get("RP_BASE_PATH"), help="path prefix where the files are served (default: path of --site-url)")
+    e.add_argument("--cname", default=os.environ.get("RP_CUSTOM_DOMAIN"), help="write a CNAME file (GitHub Pages custom domain)")
     t = sub.add_parser("train-cnn", help="train the PyTorch CNN (needs torch)")
     t.add_argument("--epochs", type=int, default=8)
     args = p.parse_args(argv)
@@ -72,9 +78,17 @@ def main(argv=None) -> int:
         from . import evals, rag
         kb = rag.KnowledgeBase.load(Paths.default().kb_path)
         print(json.dumps({"rag": rag.eval_retrieval(kb, evals.RAG_CASES), "agent": evals.eval_agent_plans()}, indent=2))
+    elif args.cmd == "mcp":
+        from .mcp_server import McpServer
+        from .model_router import AutoModelRouter
+        McpServer(_service(), router=AutoModelRouter()).serve()
+    elif args.cmd == "models":
+        from .model_router import AutoModelRouter
+        r = AutoModelRouter()
+        print(json.dumps({**r.status(), "models": r.discover_models(), "pick": r.pick_model()}, indent=2))
     elif args.cmd == "export-static":
         from .export_static import export
-        print(json.dumps(export(args.out), indent=2))
+        print(json.dumps(export(args.out, site_url=args.site_url, base_path=args.base_path, cname=args.cname), indent=2))
     elif args.cmd == "train-cnn":
         from .vision import cnn_torch
         print(json.dumps(cnn_torch.train_cnn(Paths.default().models_dir, epochs=args.epochs), indent=2))

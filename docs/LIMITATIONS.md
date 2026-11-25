@@ -33,6 +33,16 @@ Read this before you put numbers on a resume or in an interview.
 - The static demo replays only the example questions, the example SQL and the sample image tiles. Everything else needs the live backend.
 - Anomaly table in the UI shows the strongest 12 flagged days; the pipeline flags 24.
 
+## SEO and deployment
+- **No LocalBusiness structured data, on purpose.** RetailPulse is a software portfolio project; it has no storefront, address or opening hours, and inventing them would be false structured data that search engines can penalise. The page declares a WebApplication, WebPage/BreadcrumbList and its author (name and public profile links only). If you run a real local business, add that markup for that business, not for this project.
+- A custom domain needs a domain you own; none is configured. Until you set `SITE_URL`, canonical tags point at the GitHub Pages address.
+- `robots.txt` is only honoured by crawlers at the root of a host. On the GitHub Pages project address (`/RetailPulse/`) the file exists but crawlers will not read it; Cloudflare or a custom domain fixes that.
+- Structured data is written per page at build time. After in-app navigation the old page's JSON-LD is removed rather than left wrong, which is fine for crawlers (they fetch each URL fresh) but means it is absent during a single-page session.
+- Lighthouse, a formal accessibility audit and Search Console were **not** run here. What was checked: unique titles/descriptions, one `<h1>` per page, alt text, canonicals matching the sitemap, valid JSON-LD, working internal links, zero console errors/warnings in a headless browser on all nine pages at two URL depths, and no source maps. Rankings and "Core Web Vitals" scores were not measured.
+- "Bundle size" is already small (about 100 KB of JavaScript in 13 files, loaded per page, no bundler, no source maps); there was nothing large to reduce. A test fails if it grows past 120 KB.
+- The Cloudflare and GitHub Pages workflows have never run; the Cloudflare guide has not been followed on a real account.
+- The earlier v3.0.0/v3.1.0 commits on GitHub added a `src/retailpulse/` tree whose "CNN" was a hand-weighted formula over three numbers and whose "hybrid RAG" lacked abstention. They were not carried over under those names; the real classifier is `retailpulse/vision/` and the real retriever is `retailpulse/rag.py`.
+
 ## Engineering
 - SQLite is great for a portfolio project and single-node use; it is not a multi-writer production warehouse.
 - The Streamlit dashboard, Dockerfile and compose file were **not executed** in the authoring environment (Streamlit not installable; no Docker daemon). They were syntax-checked, and everything they call is covered by tests. Run them once yourself and fix anything environment-specific.

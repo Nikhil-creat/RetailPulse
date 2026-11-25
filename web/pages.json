@@ -1,0 +1,106 @@
+{
+  "site": {
+    "name": "RetailPulse",
+    "tagline": "Retail analytics and guarded AI over a SQL star schema",
+    "author": "Nikhil Chary Sriramoju",
+    "author_url": "https://github.com/Nikhil-creat",
+    "same_as": [
+      "https://github.com/Nikhil-creat",
+      "https://in.linkedin.com/in/nikhil-chary-sriramoju-95041b38a"
+    ],
+    "repo": "https://github.com/Nikhil-creat/RetailPulse",
+    "locale": "en_IN"
+  },
+  "pages": [
+    {
+      "key": "overview", "path": "/", "nav": "Overview", "crumb": "Overview", "type": "WebPage",
+      "title": "Retail Analytics Dashboard with Guarded AI | RetailPulse",
+      "h1": "Business overview",
+      "description": "RetailPulse is a retail analytics platform on a SQL star schema: KPIs, demand forecasting, churn, a RAG assistant and a guarded agent. Synthetic data.",
+      "intro": "Net revenue excludes returned orders. Every figure comes from the SQL star-schema warehouse. The data is synthetic (fixed seed), so the pipeline is real and the business is not.",
+      "social": "social/overview.png",
+      "related": ["forecast", "customers", "assistant"]
+    },
+    {
+      "key": "customers", "path": "/customer-analytics/", "nav": "Customers", "crumb": "Customer analytics", "type": "WebPage",
+      "title": "Customer Analytics: RFM, Churn Risk, Cohorts | RetailPulse",
+      "h1": "Customers",
+      "description": "RFM segments, a temporally validated churn model, cohort retention and a no-PII customer 360 view, all computed from a SQL warehouse of synthetic orders.",
+      "intro": "RFM segments, churn risk, a no-PII customer 360 and cohort retention. Customers appear only as anonymous keys.",
+      "social": "social/customers.png",
+      "related": ["forecast", "explorer", "trust"]
+    },
+    {
+      "key": "forecast", "path": "/demand-forecast/", "nav": "Forecast", "crumb": "Demand forecast", "type": "WebPage",
+      "title": "Demand Forecast, Backtest and Anomalies | RetailPulse",
+      "h1": "Demand forecast",
+      "description": "Daily net revenue forecast with an empirical range, a backtest against seasonal-naive and moving-average baselines, and flash-sale anomaly detection.",
+      "intro": "Daily net revenue forecast with an empirical range, a backtest against simple baselines, and anomaly detection. The model under-forecasts and the page says so.",
+      "social": "social/forecast.png",
+      "related": ["customers", "trust", "api"]
+    },
+    {
+      "key": "assistant", "path": "/ai-assistant/", "nav": "Assistant", "crumb": "AI assistant", "type": "WebPage",
+      "title": "AI Assistant: Guarded Agent and Cited RAG | RetailPulse",
+      "h1": "Assistant",
+      "description": "Ask in plain English. A tool-using agent calls allow-listed read-only tools and shows each step; a RAG assistant answers with citations or abstains.",
+      "intro": "Ask in plain English. The agent plans, calls allow-listed read-only tools and shows each step. The knowledge base answers with citations or says it does not know.",
+      "social": "social/assistant.png",
+      "related": ["explorer", "trust", "api"]
+    },
+    {
+      "key": "explorer", "path": "/sql-explorer/", "nav": "Explorer", "crumb": "SQL explorer", "type": "WebPage",
+      "title": "SQL Explorer with Read-Only Query Guard | RetailPulse",
+      "h1": "Data explorer",
+      "description": "The SQL library behind the dashboards and a guarded console. Every query runs read-only through an authorizer allow-list that nulls personal data.",
+      "intro": "The SQL library behind the dashboards, and a guarded console. Everything runs read-only through the same guard the agent uses. Try the attack examples.",
+      "social": "social/explorer.png",
+      "related": ["assistant", "trust", "api"]
+    },
+    {
+      "key": "vision", "path": "/product-vision/", "nav": "Vision", "crumb": "Product image classifier", "type": "WebPage",
+      "title": "Product Image Classifier (CNN and MLP) | RetailPulse",
+      "h1": "Image classifier",
+      "description": "A small CNN/MLP image classifier that assigns a product category to a tile. Trained on synthetic icons to show the pipeline, not real-photo accuracy.",
+      "intro": "A small CNN/MLP that assigns a product category to a tile image. Trained on synthetic icons, so it shows the pipeline, not real-photo performance.",
+      "social": "social/vision.png",
+      "related": ["assistant", "trust", "about"]
+    },
+    {
+      "key": "trust", "path": "/security-and-mlops/", "nav": "Trust & MLOps", "crumb": "Security and MLOps", "type": "WebPage",
+      "title": "Security Controls, Model Registry and Drift | RetailPulse",
+      "h1": "Trust & MLOps",
+      "description": "Security controls, a model registry with promotion gates, PSI drift monitoring, data-quality checks and a verifiable hash-chained audit log, with evidence.",
+      "intro": "Security controls, a model registry with promotion gates, drift monitoring and quality checks, with the evidence behind each.",
+      "social": "social/trust.png",
+      "related": ["explorer", "api", "about"]
+    },
+    {
+      "key": "api", "path": "/api-reference/", "nav": "API", "crumb": "API reference", "type": "TechArticle",
+      "title": "REST API Reference (OpenAPI 3.1) | RetailPulse",
+      "h1": "API reference",
+      "description": "REST API reference generated from the OpenAPI 3.1 document: endpoints, roles (viewer, analyst, admin), request bodies and curl examples.",
+      "intro": "Generated from the OpenAPI 3.1 document. Roles are cumulative: viewer < analyst < admin.",
+      "social": "social/api.png",
+      "related": ["trust", "assistant", "about"]
+    },
+    {
+      "key": "about", "path": "/about/", "nav": "About", "crumb": "About and limitations", "type": "AboutPage",
+      "title": "About RetailPulse, Architecture and Limitations",
+      "h1": "About RetailPulse",
+      "description": "How RetailPulse is built, what it measures honestly, and its limitations: synthetic data, an under-forecasting model and a small self-written eval set.",
+      "intro": "A portfolio-grade analytics platform built to show the whole stack honestly: data, models, AI, security, MLOps and a real web app.",
+      "social": "social/about.png",
+      "related": ["trust", "api", "forecast"]
+    }
+  ],
+  "not_found": {
+    "key": "not_found", "path": "/404.html", "nav": "", "crumb": "Page not found", "type": "WebPage",
+    "title": "Page Not Found | RetailPulse",
+    "h1": "Page not found",
+    "description": "This page does not exist. Use the navigation to open the RetailPulse overview, forecast, assistant or API reference.",
+    "intro": "That page does not exist or has moved. Try one of these instead.",
+    "social": "social/overview.png",
+    "related": ["overview", "forecast", "assistant"]
+  }
+}

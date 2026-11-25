@@ -1,5 +1,17 @@
 # Changelog
 
+## 3.2.0
+- Real page URLs (`/demand-forecast/`, `/ai-assistant/`, ...) with complete HTML per page: unique title, meta description, canonical, Open Graph/Twitter tags, one `<h1>`, breadcrumbs, JSON-LD (WebSite, WebApplication, Person, WebPage, BreadcrumbList), related-page links and alt text. Custom `404.html`. Old `#/page` links still work.
+- Crawler files: `sitemap.xml`, `robots.txt`, `llms.txt`, multi-size `favicon.ico`, nine 1200x630 social cards (`tools/make_social_images.py`).
+- Cloudflare Pages deployment: `_headers` (CSP and friends), `cloudflare.yml`, `wrangler.toml`, `docs/DEPLOY_CLOUDFLARE.md`; `--site-url`, `--base-path`, `--cname` options for `export-static`.
+- Static site no longer probes a non-existent backend (removed a console error on every page load).
+- Read-only MCP server (`cli mcp`, 7 tools) and optional Groq/Gemini model router (`cli models`), both stdlib-only and tested.
+- Fixes: restored the CI workflow, threat-model `SECURITY.md` and `.env.example` that v3.0.0 overwrote; removed the shadow `src/retailpulse/` package that made CI fail with `No module named 'retailpulse.ai'`; Dockerfile now copies `web/`.
+- 142 tests (was 113).
+
+## 3.0.0 / 3.1.0 (intermediate pushes)
+- Added `src/retailpulse/{ai,mcp}` prototypes and replaced CI/SECURITY/.env. Superseded by 3.2.0, which keeps the useful ideas (model discovery, MCP tool surface) inside the real package and drops the rest.
+
 ## 2.0.0
 - Web app: 9-page SPA (overview, customers, forecast, assistant, explorer, vision, trust & MLOps, API, about), dark mode, installable PWA, keyboard and screen-reader support, CSP-safe (no inline script/style).
 - Static demo mode (GitHub Pages) that replays real pre-computed outputs.

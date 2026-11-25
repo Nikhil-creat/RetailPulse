@@ -1,0 +1,51 @@
+name: Deploy to Cloudflare Pages
+
+# Needs two repository SECRETS (Settings -> Secrets and variables -> Actions):
+#   CLOUDFLARE_API_TOKEN   (permission: Account > Cloudflare Pages > Edit)
+#   CLOUDFLARE_ACCOUNT_ID
+# and one repository VARIABLE:
+#   SITE_URL   the public address, e.g. https://retailpulse.pages.dev or https://your-domain.com
+# Without the secrets this workflow builds and validates the site but skips the upload.
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: cloudflare
+  cancel-in-progress: true
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    env:
+      SITE_URL: ${{ vars.SITE_URL || 'https://retailpulse.pages.dev' }}
+      CF_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+      CF_ACCOUNT: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+      - run: pip install -r requirements-dev.txt
+      - name: Tests (includes the SEO checks)
+        run: python -m pytest -q
+      - name: Build the warehouse and models (synthetic data, seed 42)
+        run: python -m retailpulse.cli run-all
+      - name: Export the static site (served from the domain root on Cloudflare)
+        run: python -m retailpulse.cli export-static --out site --site-url "$SITE_URL" --base-path ""
+      - name: Publish to Cloudflare Pages
+        if: env.CF_TOKEN != '' && env.CF_ACCOUNT != ''
+        uses: cloudflare/wrangler-action@v3
+        with:
+          apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+          command: pages deploy site --project-name=retailpulse --branch=main
+      - name: Note
+        if: env.CF_TOKEN == '' || env.CF_ACCOUNT == ''
+        run: echo "Cloudflare secrets not set - built and validated only, nothing uploaded."

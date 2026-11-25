@@ -12,8 +12,10 @@
 - Built RFM segmentation, cohort retention and market-basket analysis; forecast daily revenue with gradient boosting, cutting weekly WAPE from 33.6% (seasonal-naive baseline) to 19.9% on a 60-day holdout, with leakage tests and a documented under-forecast bias.
 - Trained a temporally validated churn model (ROC AUC 0.705 vs 0.655 recency baseline) with value-at-risk ranking.
 - Implemented a grounded RAG assistant (citations, abstains when unsure) and a tool-using agent with allow-listed tools, step budget and prompt-injection refusals; evaluated on 18 retrieval and 13 agent cases.
-- Secured the system: read-only SQL guard (authorizer allow-list, PII nulling, timeout), hashed API keys with viewer/analyst/admin roles, rate limiting, strict CSP, hash-chained audit log; 113 automated tests, CI via GitHub Actions, non-root read-only Docker image.
+- Secured the system: read-only SQL guard (authorizer allow-list, PII nulling, timeout), hashed API keys with viewer/analyst/admin roles, rate limiting, strict CSP, hash-chained audit log; 142 automated tests, CI via GitHub Actions, non-root read-only Docker image.
 - Built a 9-page, dependency-free web app (dark mode, installable PWA, accessible charts with tooltips and table views, streaming agent over SSE) served by the API, plus a static GitHub Pages demo exported from the real pipeline.
+- Implemented a read-only MCP server (JSON-RPC over stdio, 7 schema-validated, audited tools reusing the SQL guard) and an optional LLM model router with an offline fallback; tested at protocol level.
+- Shipped per-page SEO on real URLs (unique metadata, canonical, JSON-LD, breadcrumbs, sitemap, robots, llms.txt, social cards, custom 404) and a Cloudflare Pages deployment; checked by automated tests and a headless-browser run with zero console errors.
 - Added MLOps basics: PSI drift monitoring and a model registry with promotion gates, Prometheus metrics, request IDs and OpenAPI 3.1 generated from the route registry.
 
 Short version (4 bullets) for one-page resumes: warehouse + SQL, forecast + churn, RAG + agent, security + tests/CI.
@@ -22,7 +24,7 @@ Short version (4 bullets) for one-page resumes: warehouse + SQL, forecast + chur
 "RetailPulse is a retail analytics platform I built on synthetic data. It has a SQL star-schema warehouse, customer segmentation, a demand forecast that beats a naive baseline by about 14 points of weekly error, and a churn model. On top of that I added a RAG assistant and an agent that can only call allow-listed, read-only tools, and I tested the security controls with attack cases. I'm upfront that the data is synthetic and that the forecast under-forecasts by about 18%; I wrote that down in the limitations and I know how I'd fix it with a promo calendar."
 
 ## LinkedIn "Featured" blurb
-Retail analytics + guarded AI (RAG, agent, CNN) on a SQL star schema, with a 9-page web app and live demo. 113 tests, CI, Docker. Synthetic data; limitations documented.
+Retail analytics + guarded AI (RAG, agent, CNN) on a SQL star schema, with a 9-page web app and live demo. 142 tests, CI, Docker. Synthetic data; limitations documented.
 
 ## About certificates
 A certificate is issued by the organisation that taught or assessed you. Nobody can "generate" one for you, and a self-made certificate would be a fake credential. These are real routes (check each provider's current terms, prices and whether a certificate is free):

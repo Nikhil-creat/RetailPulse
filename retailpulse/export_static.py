@@ -8,6 +8,7 @@ backend is needed for free-form use.
 from __future__ import annotations
 
 import json
+import re
 import shutil
 import tempfile
 from pathlib import Path
@@ -15,7 +16,11 @@ from pathlib import Path
 from . import __version__, config
 from .agent import AnalyticsAgent
 from .security import AuditLedger, SQLGuardError
+from .seo import Site, normalise_site_url
 from .service import RetailPulseService
+
+DEFAULT_SITE_URL = "https://nikhil-creat.github.io/RetailPulse"
+_DOMAIN = re.compile(r"^(?=.{4,253}$)([a-z0-9]([a-z0-9-]{0,61}[a-z0-9])?\.)+[a-z]{2,63}$")
 
 DIMS = ["category", "city", "channel", "payment", "age_band", "product"]
 METRICS = ["revenue", "profit", "orders", "units", "margin"]
@@ -35,16 +40,43 @@ def _write(out: Path, name: str, data) -> None:
     (out / "demo" / f"{name}.json").write_text(json.dumps(data, separators=(",", ":"), default=str), encoding="utf-8")
 
 
+def write_site_files(out: Path, site: Site, cname: str | None = None) -> list[str]:
+    """Pages (one real HTML file per slug), 404, sitemap, robots, llms.txt, _headers, CNAME."""
+    written = []
+
+    def w(rel: str, text: str) -> None:
+        p = out / rel
+        p.parent.mkdir(parents=True, exist_ok=True)
+        p.write_text(text, encoding="utf-8")
+        written.append(rel)
+
+    for page in site.pages:
+        w("index.html" if page["path"] == "/" else f"{page['path'].strip('/')}/index.html", site.render(page))
+    w("404.html", site.render(site.not_found))
+    w("sitemap.xml", site.sitemap_xml())
+    w("robots.txt", site.robots_txt())
+    w("llms.txt", site.llms_txt())
+    w("_headers", site.headers_file())
+    w(".nojekyll", "")
+    if cname:
+        if not _DOMAIN.match(cname.lower()):
+            raise ValueError(f"not a valid domain name: {cname!r}")
+        w("CNAME", cname.lower() + "\n")
+    return written
+
+
 def export(out_dir: str | Path, paths: config.Paths | None = None, web_dir: Path | None = None,
-           customers: int = 5) -> dict:
+           customers: int = 5, site_url: str | None = None, base_path: str | None = None,
+           cname: str | None = None) -> dict:
     paths = paths or config.Paths.default()
     web = Path(web_dir or config.WEB_DIR)
     out = Path(out_dir)
+    site = Site(web, site_url=normalise_site_url(site_url or DEFAULT_SITE_URL), base_path=base_path)
     if out.exists():
         shutil.rmtree(out)
     shutil.copytree(web, out)
     (out / "demo").mkdir()
-    (out / ".nojekyll").write_text("", encoding="utf-8")
+    site_files = write_site_files(out, site, cname)
 
     with tempfile.TemporaryDirectory() as tmp:  # throwaway ledger: exporting must not touch the real audit log
         svc = RetailPulseService(paths, ledger=AuditLedger(Path(tmp) / "audit.jsonl"))
@@ -107,7 +139,8 @@ def export(out_dir: str | Path, paths: config.Paths | None = None, web_dir: Path
         app = create_app(paths, keys=_NoKeys(), env="dev")
         put("openapi", app.state.openapi())
 
-    return {"out": str(out), "demo_files": written, "version": __version__}
+    return {"out": str(out), "demo_files": written, "pages": len(site.pages), "site_files": len(site_files),
+            "site_url": site.site_url, "base_path": site.base, "version": __version__}
 
 
 class _NoKeys:

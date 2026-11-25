@@ -25,6 +25,7 @@ from starlette.routing import Route
 from . import __version__, config
 from .errors import NotFound
 from .security import ROLE_RANK, ApiKeyStore, AuditLedger, RateLimiter, SQLGuardError
+from .seo import CSP_STATIC, Site
 
 API_HEADERS = {
     "X-Content-Type-Options": "nosniff",
@@ -33,13 +34,11 @@ API_HEADERS = {
     "Cache-Control": "no-store",
     "Content-Security-Policy": "default-src 'none'; frame-ancestors 'none'",
 }
-STATIC_CSP = ("default-src 'self'; script-src 'self'; style-src 'self'; img-src 'self' data: blob:; "
-              "connect-src 'self'; manifest-src 'self'; worker-src 'self'; base-uri 'none'; "
-              "form-action 'self'; frame-ancestors 'none'")
+STATIC_CSP = CSP_STATIC  # one definition, shared with the static export
 STATIC_MIME = {
     ".html": "text/html; charset=utf-8", ".js": "text/javascript; charset=utf-8", ".css": "text/css; charset=utf-8",
     ".json": "application/json", ".webmanifest": "application/manifest+json", ".svg": "image/svg+xml",
-    ".png": "image/png", ".ico": "image/x-icon", ".txt": "text/plain; charset=utf-8",
+    ".png": "image/png", ".ico": "image/x-icon", ".txt": "text/plain; charset=utf-8", ".xml": "application/xml",
 }
 _REQUEST_ID = re.compile(r"^[A-Za-z0-9\-]{8,64}$")
 
@@ -398,7 +397,23 @@ def create_app(paths: config.Paths | None = None, keys: ApiKeyStore | None = Non
         return _json(openapi(), headers={"Cache-Control": "no-cache"})
 
     # ------------------------------------------------------------------ static web app
+    try:
+        site = Site(web_root)  # live server: pages are rendered but marked noindex, with no canonical URL
+    except (OSError, ValueError, KeyError):
+        site = None
+
+    def html_page(page, status=200):
+        headers = {"X-Content-Type-Options": "nosniff", "X-Frame-Options": "DENY", "Referrer-Policy": "no-referrer",
+                   "Content-Security-Policy": STATIC_CSP, "Cache-Control": "no-cache"}
+        return Response(site.render(page), status_code=status, media_type="text/html; charset=utf-8", headers=headers)
+
     async def static(request: Request):
+        if site is not None:
+            page = site.match(request.url.path)
+            if page is not None:
+                return html_page(page)
+            if request.url.path == "/404.html":
+                return html_page(site.not_found, 404)
         rel = request.path_params.get("path", "") or "index.html"
         if rel.endswith("/"):
             rel += "index.html"
@@ -409,6 +424,10 @@ def create_app(paths: config.Paths | None = None, keys: ApiKeyStore | None = Non
         except (OSError, ValueError):
             ok = False
         if not ok:
+            last_segment = request.url.path.rstrip("/").rsplit("/", 1)[-1]
+            wants_html = "text/html" in request.headers.get("accept", "") and "." not in last_segment
+            if site is not None and wants_html:
+                return html_page(site.not_found, 404)  # a person following a bad link gets a real page
             return _json({"error": "Not found."}, 404)
         headers = {"X-Content-Type-Options": "nosniff", "X-Frame-Options": "DENY", "Referrer-Policy": "no-referrer",
                    "Content-Security-Policy": STATIC_CSP,
