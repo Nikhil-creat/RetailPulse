@@ -35,7 +35,7 @@ jobs:
       - name: Export the static site (served under /RetailPulse on GitHub Pages)
         run: python -m retailpulse.cli export-static --out site --site-url "$SITE_URL" --base-path /RetailPulse
       - uses: actions/configure-pages@v5
-      - uses: actions/upload-pages-artifact@v3
+      - uses: actions/upload-pages-artifact@v5
         with:
           path: site
 
