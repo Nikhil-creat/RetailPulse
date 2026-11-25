@@ -1,4 +1,4 @@
-# Deploy RetailPulse to Cloudflare Pages (free), with your own domain
+# Deploy RetailPulse to Cloudflare (Workers static assets, free), with your own domain
 
 What gets deployed: the **static site** (`export-static`): nine real pages with their own URLs, a custom 404, sitemap,
 robots.txt, llms.txt, social images, security headers (`_headers`) and the pre-computed demo data. The live API
@@ -13,22 +13,22 @@ robots.txt, llms.txt, social images, security headers (`_headers`) and the pre-c
 - A free Cloudflare account (https://dash.cloudflare.com/sign-up).
 - Your GitHub repo `Nikhil-creat/RetailPulse` (already pushed).
 - Optional: a domain you own. **I do not know your domain and cannot register one for you.** Without it you get a free
-  `https://<project>.pages.dev` address, which is perfectly fine for a portfolio.
+  `https://retailpulse.<subdomain>.workers.dev` address, which is perfectly fine for a portfolio.
 
 ## 1. Choose how to deploy (pick ONE)
 
-### Option A: Cloudflare builds from GitHub (easiest, all in a phone browser)
-1. Cloudflare dashboard -> **Workers & Pages** -> **Create** -> **Pages** -> **Connect to Git** -> authorise GitHub -> pick `RetailPulse`.
-2. Production branch: `main`. Framework preset: **None**.
-3. **Build command** (one line):
+### Option A: Workers Builds (Cloudflare builds from GitHub; what the dashboard now offers)
+Your Worker `retailpulse` -> **Settings -> Builds** (connect `Nikhil-creat/RetailPulse`, branch `main`):
+1. **Build command** (one line):
    ```
    pip install -r requirements.txt && python -m retailpulse.cli run-all && python -m retailpulse.cli export-static --out site --site-url "$SITE_URL" --base-path ""
    ```
-4. **Build output directory:** `site`   |   Root directory: leave empty.
-5. **Environment variables** (Production): `PYTHON_VERSION` = `3.12`, `SITE_URL` = the address people will visit,
-   e.g. `https://retailpulse.pages.dev` (use the real one Cloudflare shows after the first deploy, then update it and redeploy)
-   or `https://your-domain.com`.
-6. Save and Deploy. The build takes a few minutes (it generates the dataset and trains the models, seed 42).
+2. **Deploy command:** `npx wrangler deploy`  (reads `wrangler.jsonc`: serves `./site`, custom 404 on a miss; no Worker code).
+3. **Build variables and secrets** (these are build-only): `SITE_URL` = the address people will visit, e.g.
+   `https://retailpulse.<subdomain>.workers.dev` (Workers -> your Worker -> Settings -> Domains shows the real one) or `https://your-domain.com`;
+   `PYTHON_VERSION` = `3.12`.
+4. Retry the build. The Worker name in the dashboard must equal `name` in `wrangler.jsonc` (`retailpulse`).
+Old error "run wrangler deploy on a Pages project / Missing entry-point": caused by the former Pages-style `wrangler.toml`; it is removed.
 
 ### Option B: GitHub Actions uploads to Cloudflare
 Uses `.github/workflows/cloudflare.yml` (runs the tests first). Create the project once, then set secrets/variable from Termux:
@@ -39,17 +39,17 @@ Uses `.github/workflows/cloudflare.yml` (runs the tests first). Create the proje
    cd ~/RetailPulse
    gh secret set CLOUDFLARE_API_TOKEN
    gh secret set CLOUDFLARE_ACCOUNT_ID
-   gh variable set SITE_URL --body "https://retailpulse.pages.dev"
+   gh variable set SITE_URL --body "https://retailpulse.<subdomain>.workers.dev"
    gh workflow run cloudflare.yml && gh run watch
    ```
-3. If the project name `retailpulse` is taken on Cloudflare, change `--project-name=retailpulse` in the workflow (and `name` in `wrangler.toml`).
+3. If the project name `retailpulse` is taken on Cloudflare, change `name` in the workflow (and `name` in `wrangler.jsonc`).
 
 If you use Option A, you can ignore `cloudflare.yml` (it only builds and validates when the secrets are missing).
 
 ## 2. Custom domain
-1. Pages project -> **Custom domains** -> **Set up a domain** -> enter e.g. `retail.your-domain.com`.
+1. Worker -> Settings -> **Domains & Routes** -> Add -> **Custom domain** -> **Set up a domain** -> enter e.g. `retail.your-domain.com`.
 2. If the domain's DNS is on Cloudflare, it creates the record for you. If not, add a `CNAME` at your DNS host pointing to
-   `<project>.pages.dev`. (An apex/root domain such as `your-domain.com` needs its nameservers on Cloudflare.)
+   `retailpulse.<subdomain>.workers.dev`. (An apex/root domain such as `your-domain.com` needs its nameservers on Cloudflare.)
 3. Wait for the certificate (usually minutes). HTTPS is automatic.
 4. **Tell the site its real address**, otherwise canonical tags, the sitemap and social images point to the old URL:
    - Option A: change the `SITE_URL` environment variable -> Retry deployment.

@@ -32,7 +32,7 @@ created: delete it at GitHub -> Settings -> Developer settings -> Personal acces
 
 Deploy on Cloudflare after that: see **docs/DEPLOY_CLOUDFLARE.md**. The short version for the phone:
 ```bash
-gh variable set SITE_URL --body "https://retailpulse.pages.dev"   # replace with your real address later
+gh variable set SITE_URL --body "https://retailpulse.YOURSUBDOMAIN.workers.dev"   # replace with the real address
 ```
 then Cloudflare dashboard -> Workers & Pages -> Create -> Pages -> Connect to Git -> RetailPulse (build command and output
 folder are in that guide).

@@ -1,5 +1,0 @@
-# Cloudflare Pages (direct upload / wrangler). Build the site first:
-#   python -m retailpulse.cli run-all && python -m retailpulse.cli export-static --out site --site-url https://YOUR-DOMAIN --base-path ""
-name = "retailpulse"
-pages_build_output_dir = "site"
-compatibility_date = "2026-11-01"

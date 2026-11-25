@@ -223,3 +223,15 @@ def test_live_server_serves_a_real_404_page_to_browsers_and_json_to_clients(live
     j = request(live, "GET", "/no-such.json", {"accept": "application/json"})
     assert j.status == 404 and j.json() == {"error": "Not found."}
     assert request(live, "GET", "/v1/kpis").status == 200
+
+
+def test_wrangler_config_is_workers_static_assets():
+    import json, re, pathlib
+    root = pathlib.Path(__file__).resolve().parent.parent
+    assert not (root / "wrangler.toml").exists()
+    raw = (root / "wrangler.jsonc").read_text()
+    cfg = json.loads(re.sub(r"^\s*//.*$", "", raw, flags=re.M))
+    assert cfg["name"] == "retailpulse"
+    assert cfg["assets"]["directory"] == "./site"
+    assert cfg["assets"]["not_found_handling"] == "404-page"
+    assert "main" not in cfg
