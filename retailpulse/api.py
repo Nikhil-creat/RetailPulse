@@ -25,7 +25,7 @@ from starlette.routing import Route
 from . import __version__, config
 from .errors import NotFound
 from .security import ROLE_RANK, ApiKeyStore, AuditLedger, RateLimiter, SQLGuardError
-from .seo import CSP_STATIC, Site
+from .seo import CSP_STATIC, Site, normalise_api_url
 
 API_HEADERS = {
     "X-Content-Type-Options": "nosniff",
@@ -446,7 +446,20 @@ def create_app(paths: config.Paths | None = None, keys: ApiKeyStore | None = Non
     async def method_not_allowed(request, exc):
         return _json({"error": "Method not allowed."}, 405)
 
-    app = Starlette(routes=routes, exception_handlers={404: not_found, 405: method_not_allowed})
+    # CORS is OFF unless RP_CORS_ORIGINS lists exact origins (never "*"): the static site on a CDN may call this API.
+    middleware = []
+    origins = [normalise_api_url(o) for o in os.getenv("RP_CORS_ORIGINS", "").split(",") if o.strip()]
+    if any("*" in o for o in os.getenv("RP_CORS_ORIGINS", "").split(",")):
+        raise RuntimeError("RP_CORS_ORIGINS must list exact origins; a wildcard is not allowed.")
+    if origins:
+        from starlette.middleware import Middleware
+        from starlette.middleware.cors import CORSMiddleware
+        middleware.append(Middleware(
+            CORSMiddleware, allow_origins=origins, allow_methods=["GET", "POST", "OPTIONS"],
+            allow_headers=["Authorization", "Content-Type", "X-Request-ID"],
+            expose_headers=["Retry-After", "X-Request-ID"], allow_credentials=False, max_age=600))
+
+    app = Starlette(routes=routes, middleware=middleware, exception_handlers={404: not_found, 405: method_not_allowed})
     app.state.openapi = openapi
     app.state.specs = specs
     return app

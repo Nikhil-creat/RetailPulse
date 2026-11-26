@@ -27,6 +27,12 @@ CSP_STATIC = ("default-src 'self'; script-src 'self'; style-src 'self'; img-src 
               "form-action 'self'; frame-ancestors 'none'")
 # <meta http-equiv> CSP cannot carry frame-ancestors (browsers log an error if it is present).
 CSP_META = CSP_STATIC.replace("; frame-ancestors 'none'", "")
+
+
+def csp_for(api_url: str | None, meta: bool = False) -> str:
+    """The CSP, with the live API origin allowed in connect-src when the static site talks to a remote backend."""
+    base = CSP_META if meta else CSP_STATIC
+    return base.replace("connect-src 'self';", f"connect-src 'self' {api_url};") if api_url else base
 SOCIAL_W, SOCIAL_H = 1200, 630
 _TOKEN = re.compile(r"\{\{([A-Z_]+)\}\}")
 
@@ -50,11 +56,24 @@ def normalise_site_url(site_url: str | None) -> str | None:
     return f"{u.scheme}://{u.netloc}{u.path.rstrip('/')}"
 
 
+def normalise_api_url(api_url: str | None) -> str | None:
+    """Origin only (scheme + host[:port]): it goes into the CSP, so no paths, queries or wildcards are accepted."""
+    if not api_url or not api_url.strip():
+        return None
+    u = urlparse(api_url.strip())
+    local = u.hostname in ("localhost", "127.0.0.1")
+    if u.scheme not in ("http", "https") or not u.netloc or (u.scheme == "http" and not local):
+        raise ValueError(f"api url must be an https origin (http only for localhost), got {api_url!r}")
+    if u.path not in ("", "/") or u.query or u.fragment or "*" in u.netloc or " " in api_url.strip() or ";" in api_url:
+        raise ValueError(f"api url must be an origin only, like https://host, got {api_url!r}")
+    return f"{u.scheme}://{u.netloc}"
+
+
 class Site:
     """Renders pages for one deployment (a site URL for canonicals and a base path for assets)."""
 
     def __init__(self, web_dir: Path, site_url: str | None = None, base_path: str | None = None,
-                 version: str = __version__):
+                 version: str = __version__, api_url: str | None = None):
         self.web_dir = Path(web_dir)
         data = json.loads((self.web_dir / "pages.json").read_text(encoding="utf-8"))
         self.meta = data["site"]
@@ -72,6 +91,7 @@ class Site:
             raise ValueError("base path must start with '/'")
         self.base = base_path
         self.version = version
+        self.api_url = normalise_api_url(api_url)
 
     # ------------------------------------------------------------------ urls
     @property
@@ -209,7 +229,8 @@ class Site:
             "DESCRIPTION": esc(page["description"]),
             "ROBOTS": robots,
             "HEAD_META": self.head_meta_html(page),
-            "CSP_META": f'<meta http-equiv="Content-Security-Policy" content="{esc(CSP_META)}">' if self.indexable else "",
+            "CSP_META": f'<meta http-equiv="Content-Security-Policy" content="{esc(csp_for(self.api_url, meta=True))}">' if self.indexable else "",
+            "API_META": f'<meta name="rp-api" content="{esc(self.api_url)}">' if (self.indexable and self.api_url) else "",
             "JSONLD": ld,
             "MODE": "static" if self.indexable else "live",
             "PAGE_KEY": esc(key),
@@ -268,7 +289,7 @@ class Site:
             "  Referrer-Policy: strict-origin-when-cross-origin\n"
             "  Permissions-Policy: camera=(), microphone=(), geolocation=(), payment=()\n"
             "  Cross-Origin-Opener-Policy: same-origin\n"
-            f"  Content-Security-Policy: {CSP_STATIC}\n"
+            f"  Content-Security-Policy: {csp_for(self.api_url)}\n"
             "/icons/*\n  Cache-Control: public, max-age=86400\n"
             "/samples/*\n  Cache-Control: public, max-age=86400\n"
             "/social/*\n  Cache-Control: public, max-age=86400\n"

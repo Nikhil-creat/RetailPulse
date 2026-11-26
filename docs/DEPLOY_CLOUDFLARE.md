@@ -27,7 +27,8 @@ Your Worker `retailpulse` -> **Settings -> Builds** (connect `Nikhil-creat/Retai
 3. **Build variables and secrets** (these are build-only): `SITE_URL` = the address people will visit, e.g.
    `https://retailpulse.<subdomain>.workers.dev` (Workers -> your Worker -> Settings -> Domains shows the real one) or `https://your-domain.com`;
    `PYTHON_VERSION` = `3.12`.
-4. Retry the build. The Worker name in the dashboard must equal `name` in `wrangler.jsonc` (`retailpulse`).
+4. Optional, for the fully live site: add build variable `RP_API_URL` (see `docs/DEPLOY_LIVE_BACKEND.md`).
+5. Retry the build. The Worker name in the dashboard must equal `name` in `wrangler.jsonc` (`retailpulse`).
 Old error "run wrangler deploy on a Pages project / Missing entry-point": caused by the former Pages-style `wrangler.toml`; it is removed.
 
 ### Option B: GitHub Actions uploads to Cloudflare

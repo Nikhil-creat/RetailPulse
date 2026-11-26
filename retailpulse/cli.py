@@ -40,6 +40,7 @@ def main(argv=None) -> int:
     e.add_argument("--site-url", default=os.environ.get("RP_SITE_URL"), help="public URL used in canonical tags and the sitemap")
     e.add_argument("--base-path", default=os.environ.get("RP_BASE_PATH"), help="path prefix where the files are served (default: path of --site-url)")
     e.add_argument("--cname", default=os.environ.get("RP_CUSTOM_DOMAIN"), help="write a CNAME file (GitHub Pages custom domain)")
+    e.add_argument("--api-url", default=os.environ.get("RP_API_URL"), help="origin of a live backend (e.g. https://user-retailpulse.hf.space); the site then runs in LIVE mode when it is reachable, demo otherwise")
     t = sub.add_parser("train-cnn", help="train the PyTorch CNN (needs torch)")
     t.add_argument("--epochs", type=int, default=8)
     args = p.parse_args(argv)
@@ -88,7 +89,7 @@ def main(argv=None) -> int:
         print(json.dumps({**r.status(), "models": r.discover_models(), "pick": r.pick_model()}, indent=2))
     elif args.cmd == "export-static":
         from .export_static import export
-        print(json.dumps(export(args.out, site_url=args.site_url, base_path=args.base_path, cname=args.cname), indent=2))
+        print(json.dumps(export(args.out, site_url=args.site_url, base_path=args.base_path, cname=args.cname, api_url=args.api_url), indent=2))
     elif args.cmd == "train-cnn":
         from .vision import cnn_torch
         print(json.dumps(cnn_torch.train_cnn(Paths.default().models_dir, epochs=args.epochs), indent=2))

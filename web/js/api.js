@@ -6,9 +6,12 @@ import { sleep } from './util.js';
 // request works from any page path.
 export const ROOT = new URL('../', import.meta.url).pathname;
 const IS_STATIC = (document.querySelector('meta[name="rp-mode"]') || {}).content === 'static';
-const abs = (p) => (p.startsWith('/') ? p : ROOT + p);
+// Optional remote backend (static site on a CDN, API elsewhere). Empty = same origin.
+const API = ((document.querySelector('meta[name="rp-api"]') || {}).content || '').replace(/\/$/, '');
+export const apiBase = () => API;
+const abs = (p) => (API ? `${API}/${p.replace(/^\//, '')}` : p.startsWith('/') ? p : ROOT + p);
 
-const state = { mode: 'live', health: null, me: null, key: readKey() };
+const state = { mode: 'live', health: null, me: null, key: readKey(), backend: false };
 
 function readKey() {
   try { return sessionStorage.getItem('rp_key') || ''; } catch { return ''; }
@@ -18,7 +21,12 @@ export function setKey(k) {
   try { state.key ? sessionStorage.setItem('rp_key', state.key) : sessionStorage.removeItem('rp_key'); } catch { /* storage blocked */ }
 }
 export const hasKey = () => !!state.key;
-export const mode = () => state.mode;
+// "locked": a reachable backend that needs a key and has none yet. A static site then shows the pre-exported
+// demo data (no failing 401 calls); once a valid key is set, every call goes to the live API.
+const locked = () => state.backend && !!(state.health && state.health.auth_required) && !state.me;
+const eff = () => (state.mode === 'live' && IS_STATIC && locked() ? 'demo' : state.mode);
+export const mode = () => eff();
+export const backend = () => state.backend;
 export const health = () => state.health;
 export const me = () => state.me;
 
@@ -50,17 +58,21 @@ async function demo(name) {
   return res.json();
 }
 
-const get = (livePath, demoName) => (state.mode === 'demo' ? demo(demoName) : http(livePath));
+const get = (livePath, demoName) => (eff() === 'demo' ? demo(demoName) : http(livePath));
 const jsonPost = (path, payload) => http(path, { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify(payload) });
 
 export async function boot() {
   try {
-    // The static export is known to have no backend, so do not probe one (a failed probe is a console error).
-    if (IS_STATIC) throw new Error('static site');
-    const r = await fetch(`${ROOT}health`, { cache: 'no-store' });
+    // A static export with no backend configured must not probe one (a failed probe is a console error).
+    if (IS_STATIC && !API) throw new Error('static site');
+    // A free-tier backend can be asleep; give it a bounded wake-up window, then fall back to the demo data.
+    const ctl = new AbortController();
+    const timer = setTimeout(() => ctl.abort(), API ? 12000 : 8000);
+    const r = await fetch(abs('health'), { cache: 'no-store', signal: ctl.signal }).finally(() => clearTimeout(timer));
     if (!r.ok || !(r.headers.get('content-type') || '').includes('json')) throw new Error('not live');
     state.health = await r.json();
     state.mode = 'live';
+    state.backend = true;
   } catch {
     try {
       state.health = await demo('health');
@@ -76,6 +88,8 @@ export async function boot() {
 
 export async function refreshMe() {
   if (state.mode === 'demo') { state.me = await demo('me').catch(() => null); return state.me; }
+  // No key on a server that requires one: do not make a request that can only fail with 401.
+  if (state.health && state.health.auth_required && !state.key) { state.me = null; return null; }
   try { state.me = await http('v1/me'); } catch { state.me = null; }
   return state.me;
 }
@@ -97,12 +111,12 @@ export const api = {
   monitoring: () => get('v1/monitoring', 'monitoring'),
   models: () => get('v1/models', 'models'),
   openapi: () => get('openapi.json', 'openapi'),
-  auditTail: (n = 20) => (state.mode === 'demo' ? Promise.reject(new ApiError(404, 'The audit log is not part of the static demo.')) : http(`v1/audit/tail?n=${n}`)),
-  auditVerify: () => (state.mode === 'demo' ? Promise.reject(new ApiError(404, 'Not available in the static demo.')) : http('v1/audit/verify')),
+  auditTail: (n = 20) => (eff() === 'demo' ? Promise.reject(new ApiError(404, 'The audit log is not part of the static demo.')) : http(`v1/audit/tail?n=${n}`)),
+  auditVerify: () => (eff() === 'demo' ? Promise.reject(new ApiError(404, 'Not available in the static demo.')) : http('v1/audit/verify')),
 
-  async guardExamples() { return state.mode === 'demo' ? demo('guard_examples') : null; },
+  async guardExamples() { return eff() === 'demo' ? demo('guard_examples') : null; },
   async sql(sql) {
-    if (state.mode === 'demo') {
+    if (eff() === 'demo') {
       const ex = (await demo('guard_examples')).find((e) => e.sql === sql);
       if (!ex) throw new ApiError(400, 'The demo only replays the example queries. Run the backend to execute your own.');
       if (ex.error) throw new ApiError(400, ex.error);
@@ -111,7 +125,7 @@ export const api = {
     return jsonPost('v1/sql', { sql });
   },
   async ask(question) {
-    if (state.mode === 'demo') {
+    if (eff() === 'demo') {
       const ex = (await demo('examples')).find((e) => e.mode === 'rag' && e.question === question);
       if (!ex) throw new ApiError(400, 'The demo only replays the example questions.');
       return ex.result;
@@ -119,7 +133,7 @@ export const api = {
     return jsonPost('v1/ask', { question });
   },
   async classify(blob, name) {
-    if (state.mode === 'demo') {
+    if (eff() === 'demo') {
       const hit = (await demo('samples')).find((s) => s.name === name);
       if (!hit) throw new ApiError(400, 'Uploads need the live backend. Click a sample tile instead.');
       return hit.result;
@@ -128,7 +142,7 @@ export const api = {
   },
   // Streams plan -> step -> final events. onEvent({type, ...}) is called as each arrives.
   async streamAgent(question, onEvent) {
-    if (state.mode === 'demo') {
+    if (eff() === 'demo') {
       const ex = (await demo('examples')).find((e) => e.mode === 'agent' && e.question === question);
       if (!ex) throw new ApiError(400, 'The demo only replays the example questions.');
       for (const ev of ex.events) { await sleep(ev.type === 'step' ? 450 : 200); onEvent(ev); }
@@ -136,7 +150,7 @@ export const api = {
     }
     const headers = { 'content-type': 'application/json' };
     if (state.key) headers.Authorization = `Bearer ${state.key}`;
-    const res = await fetch(`${ROOT}v1/agent/stream`, { method: 'POST', headers, body: JSON.stringify({ question }) });
+    const res = await fetch(abs('v1/agent/stream'), { method: 'POST', headers, body: JSON.stringify({ question }) });
     if (!res.ok) {
       const data = await res.json().catch(() => null);
       throw new ApiError(res.status, (data && data.error) || res.statusText);

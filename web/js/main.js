@@ -1,4 +1,4 @@
-import { ROOT, api, boot, hasKey, health, me, mode, refreshMe, setKey } from './api.js';
+import { ROOT, api, backend, boot, hasKey, health, me, mode, refreshMe, setKey } from './api.js';
 import { $, clear, el, toast } from './util.js';
 import { banner, errorBox, loading } from './ui.js';
 
@@ -39,14 +39,14 @@ function initTheme() {
 function paintChrome() {
   const m = mode(), h = health(), who = me();
   const mb = $('#mode-badge');
-  mb.textContent = m === 'live' ? 'Live backend' : m === 'demo' ? 'Static demo' : 'Offline';
+  mb.textContent = m === 'live' ? 'Live backend' : m === 'demo' ? (backend() ? 'Demo data · sign in for live' : 'Static demo') : 'Offline';
   mb.className = `badge ${m === 'live' ? 'live' : m === 'demo' ? 'demo' : ''}`;
   mb.title = m === 'demo' ? 'Showing pre-exported results. Run the backend for live queries.' : 'Connected to the RetailPulse API';
   const rb = $('#role-badge');
   rb.hidden = !who;
   if (who) { rb.textContent = m === 'demo' ? 'read-only' : who.role; }
   const kb = $('#key-btn');
-  kb.hidden = !(m === 'live' && h && h.auth_required);
+  kb.hidden = !(backend() && h && h.auth_required);
   kb.querySelector('span').textContent = hasKey() ? 'Key set' : 'API key';
   if (h && h.version) $('#ver').textContent = `v${h.version}`;
   const dot = $('#st-service'), txt = $('#st-service-text');
@@ -213,8 +213,8 @@ async function main() {
   window.addEventListener('hashchange', () => { upgradeLegacyHash(); render(); });
   initLinks();
   await render();
-  if (mode() === 'live' && health() && health().auth_required && !me()) {
-    toast('This server needs an API key. Use the key button in the header.', 'info');
+  if (backend() && health() && health().auth_required && !me()) {
+    toast('Live backend found. Showing demo data: add your API key (key button) to switch to live.', 'info');
   }
   if ('serviceWorker' in navigator && (location.protocol === 'https:' || ['localhost', '127.0.0.1'].includes(location.hostname))) {
     navigator.serviceWorker.register(`${ROOT}sw.js`).catch(() => { /* optional enhancement */ });

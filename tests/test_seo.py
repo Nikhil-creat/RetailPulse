@@ -235,3 +235,48 @@ def test_wrangler_config_is_workers_static_assets():
     assert cfg["assets"]["directory"] == "./site"
     assert cfg["assets"]["not_found_handling"] == "404-page"
     assert "main" not in cfg
+
+
+def test_api_url_validation_and_csp(tmp_path):
+    import pytest
+    from retailpulse.seo import normalise_api_url, csp_for
+    assert normalise_api_url("https://u-retailpulse.hf.space/") == "https://u-retailpulse.hf.space"
+    assert normalise_api_url("") is None
+    for bad in ["http://evil.com", "https://a.com/x", "https://*.a.com", "ftp://a.com", "https://a.com; script-src *"]:
+        with pytest.raises(ValueError):
+            normalise_api_url(bad)
+    assert "connect-src 'self' https://x.hf.space;" in csp_for("https://x.hf.space")
+    assert "frame-ancestors" not in csp_for("https://x.hf.space", meta=True)
+
+
+def test_export_with_api_url_sets_meta_csp_and_headers(tmp_path, built):
+    from retailpulse.export_static import export
+    paths = built[0]
+    out = tmp_path / "site"
+    r = export(out, paths, site_url="https://retailpulse.example.dev", base_path="", api_url="https://x.hf.space")
+    assert r["api_url"] == "https://x.hf.space"
+    html = (out / "index.html").read_text()
+    assert '<meta name="rp-api" content="https://x.hf.space">' in html
+    import html as _h
+    assert "connect-src 'self' https://x.hf.space" in _h.unescape(html)
+    assert "connect-src 'self' https://x.hf.space" in (out / "_headers").read_text()
+    r2 = export(tmp_path / "s2", paths, site_url="https://retailpulse.example.dev", base_path="")
+    assert "rp-api" not in (tmp_path / "s2" / "index.html").read_text()
+
+
+def test_cors_only_for_listed_origin(monkeypatch):
+    from starlette.testclient import TestClient
+    from retailpulse.api import create_app
+    monkeypatch.setenv("RP_CORS_ORIGINS", "https://site.example.dev")
+    c = TestClient(create_app(env="dev"))
+    ok = c.get("/health", headers={"Origin": "https://site.example.dev"})
+    assert ok.headers.get("access-control-allow-origin") == "https://site.example.dev"
+    bad = c.get("/health", headers={"Origin": "https://evil.example"})
+    assert "access-control-allow-origin" not in bad.headers
+    pre = c.options("/v1/kpis", headers={"Origin": "https://site.example.dev", "Access-Control-Request-Method": "GET",
+                                          "Access-Control-Request-Headers": "authorization"})
+    assert pre.status_code == 200
+    monkeypatch.setenv("RP_CORS_ORIGINS", "*")
+    import pytest
+    with pytest.raises(Exception):
+        create_app(env="dev")

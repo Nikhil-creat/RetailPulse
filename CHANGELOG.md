@@ -1,6 +1,8 @@
 # Changelog
 
 ## 3.2.0
+
+- Live mode for the static site: `--api-url`/`RP_API_URL` (meta `rp-api`, CSP `connect-src` allow-list), opt-in CORS via `RP_CORS_ORIGINS` (exact origins, no wildcard), "Demo data · sign in for live" state with no 401 console errors, Hugging Face Space deploy (`deploy/huggingface`, `tools/deploy_hf_space.sh`, `docs/DEPLOY_LIVE_BACKEND.md`).
 - Real page URLs (`/demand-forecast/`, `/ai-assistant/`, ...) with complete HTML per page: unique title, meta description, canonical, Open Graph/Twitter tags, one `<h1>`, breadcrumbs, JSON-LD (WebSite, WebApplication, Person, WebPage, BreadcrumbList), related-page links and alt text. Custom `404.html`. Old `#/page` links still work.
 - Crawler files: `sitemap.xml`, `robots.txt`, `llms.txt`, multi-size `favicon.ico`, nine 1200x630 social cards (`tools/make_social_images.py`).
 - Cloudflare Pages deployment: `_headers` (CSP and friends), `cloudflare.yml`, `wrangler.jsonc` (Workers static assets, `not_found_handling: 404-page`), `docs/DEPLOY_CLOUDFLARE.md`; `--site-url`, `--base-path`, `--cname` options for `export-static`.

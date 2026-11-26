@@ -25,6 +25,7 @@ jobs:
     runs-on: ubuntu-latest
     env:
       SITE_URL: ${{ vars.SITE_URL }}
+      RP_API_URL: ${{ vars.API_URL }}
       CF_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
       CF_ACCOUNT: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
     steps:

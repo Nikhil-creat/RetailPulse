@@ -67,11 +67,11 @@ def write_site_files(out: Path, site: Site, cname: str | None = None) -> list[st
 
 def export(out_dir: str | Path, paths: config.Paths | None = None, web_dir: Path | None = None,
            customers: int = 5, site_url: str | None = None, base_path: str | None = None,
-           cname: str | None = None) -> dict:
+           cname: str | None = None, api_url: str | None = None) -> dict:
     paths = paths or config.Paths.default()
     web = Path(web_dir or config.WEB_DIR)
     out = Path(out_dir)
-    site = Site(web, site_url=normalise_site_url(site_url or DEFAULT_SITE_URL), base_path=base_path)
+    site = Site(web, site_url=normalise_site_url(site_url or DEFAULT_SITE_URL), base_path=base_path, api_url=api_url)
     if out.exists():
         shutil.rmtree(out)
     shutil.copytree(web, out)
@@ -140,7 +140,7 @@ def export(out_dir: str | Path, paths: config.Paths | None = None, web_dir: Path
         put("openapi", app.state.openapi())
 
     return {"out": str(out), "demo_files": written, "pages": len(site.pages), "site_files": len(site_files),
-            "site_url": site.site_url, "base_path": site.base, "version": __version__}
+            "site_url": site.site_url, "api_url": site.api_url, "base_path": site.base, "version": __version__}
 
 
 class _NoKeys:

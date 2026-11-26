@@ -172,3 +172,7 @@ tools/         social-card + favicon generator
 ```
 
 License: MIT
+
+
+## Fully live deployment
+Static website on Cloudflare + Docker API on a free Hugging Face Space: see [docs/DEPLOY_LIVE_BACKEND.md](docs/DEPLOY_LIVE_BACKEND.md).
