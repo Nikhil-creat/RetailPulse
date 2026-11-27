@@ -176,3 +176,6 @@ License: MIT
 
 ## Fully live deployment
 Static website on Cloudflare + Docker API on a free Hugging Face Space: see [docs/DEPLOY_LIVE_BACKEND.md](docs/DEPLOY_LIVE_BACKEND.md).
+
+## Product features beyond the dashboards
+- **Executive brief** (computed findings with evidence and recommended actions), **Scenario planner** (what-if profit model), **command palette** (Ctrl/Cmd+K), guarded agent with streaming steps, cited RAG, SafeSQL console, CNN image classifier, hash-chained audit ledger, MCP server.

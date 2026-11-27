@@ -1,6 +1,6 @@
 # Deploy RetailPulse to Cloudflare (Workers static assets, free), with your own domain
 
-What gets deployed: the **static site** (`export-static`): nine real pages with their own URLs, a custom 404, sitemap,
+What gets deployed: the **static site** (`export-static`): ten real pages with their own URLs, a custom 404, sitemap,
 robots.txt, llms.txt, social images, security headers (`_headers`) and the pre-computed demo data. The live API
 (login, free-form SQL, uploads) is a separate Python service and is **not** part of this; the demo says so on screen.
 

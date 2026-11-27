@@ -126,7 +126,7 @@ class Site:
         return "\n      ".join(out)
 
     def footer_links_html(self) -> str:
-        keys = ("overview", "customers", "forecast", "assistant", "explorer", "vision")
+        keys = ("overview", "customers", "forecast", "scenario", "assistant", "explorer", "vision")
         return "".join(f'<li><a href="{esc(self.href(self.by_key[k]))}">{esc(self.by_key[k]["crumb"])}</a></li>' for k in keys)
 
     def trust_links_html(self) -> str:

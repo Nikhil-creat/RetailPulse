@@ -1,11 +1,13 @@
 import { ROOT, api, backend, boot, hasKey, health, me, mode, refreshMe, setKey } from './api.js';
 import { $, clear, el, toast } from './util.js';
 import { banner, errorBox, loading } from './ui.js';
+import { initPalette } from './palette.js';
 
 const ROUTES = {
   overview: ['Overview', './views/overview.js'],
   customers: ['Customers', './views/customers.js'],
   forecast: ['Forecast', './views/forecast.js'],
+  scenario: ['Scenarios', './views/scenario.js'],
   assistant: ['Assistant', './views/assistant.js'],
   explorer: ['Explorer', './views/explorer.js'],
   vision: ['Vision', './views/vision.js'],
@@ -190,7 +192,7 @@ function initLinks() {
     if (u.hash && u.pathname === location.pathname) return; // in-page anchor such as the skip link
     if (!keyForPath(u.pathname)) return;
     e.preventDefault();
-    if (normPath(u.pathname) !== normPath(location.pathname)) history.pushState({}, '', u.pathname);
+    if (normPath(u.pathname) !== normPath(location.pathname)) history.pushState({}, '', u.pathname + u.search);
     render();
   });
   window.addEventListener('popstate', render);
@@ -212,6 +214,7 @@ async function main() {
   upgradeLegacyHash();
   window.addEventListener('hashchange', () => { upgradeLegacyHash(); render(); });
   initLinks();
+  initPalette(META && META.site ? META.site.repo : null);
   await render();
   if (backend() && health() && health().auth_required && !me()) {
     toast('Live backend found. Showing demo data: add your API key (key button) to switch to live.', 'info');

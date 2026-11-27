@@ -265,3 +265,31 @@ button.chip { white-space: normal; text-align: left; }
 .related ul { list-style: none; margin: 0; padding: 0; display: grid; gap: 8px; }
 .related .muted { color: var(--ink-3); }
 .foot .foot-title { margin: 0 0 8px; color: var(--ink); font-size: .85rem; font-weight: 600; }
+
+/* Executive brief */
+.brief-list { display: grid; gap: 12px; margin-top: 8px; }
+.brief-item { border: 1px solid var(--border); border-left-width: 4px; border-radius: 10px; padding: 12px 14px; background: var(--surface-2); }
+.brief-item.sev-risk { border-left-color: var(--bad); } .brief-item.sev-watch { border-left-color: var(--warn); }
+.brief-item.sev-opportunity, .brief-item.sev-good { border-left-color: var(--ok); } .brief-item.sev-info { border-left-color: var(--border-strong); }
+.brief-item h4 { margin: 0; font-size: 1rem; }
+.brief-item p { margin: 6px 0 0; }
+.brief-action { color: var(--ink-2); }
+.brief-evidence { font-size: .86rem; color: var(--ink-2); }
+.brief-evidence summary { cursor: pointer; padding: 4px 0; }
+.brief-evidence dl { display: grid; grid-template-columns: max-content 1fr; gap: 2px 14px; margin: 6px 0 0; }
+.brief-evidence dt { color: var(--ink-3); text-transform: capitalize; } .brief-evidence dd { margin: 0; font-variant-numeric: tabular-nums; }
+
+/* Scenario planner */
+.scenario-controls { display: grid; gap: 14px; align-content: start; }
+.sc-row { display: grid; grid-template-columns: 1fr auto; gap: 2px 10px; align-items: baseline; }
+.sc-row label { font-weight: 600; } .sc-row output { font-variant-numeric: tabular-nums; color: var(--ink-2); }
+.sc-row input[type=range] { grid-column: 1 / -1; width: 100%; accent-color: var(--focus); min-height: 28px; }
+.sc-row .sub { grid-column: 1 / -1; margin: 0; }
+.stack { display: grid; gap: 16px; align-content: start; min-width: 0; }
+
+/* Command palette */
+dialog.palette { width: min(92vw, 520px); padding: 12px; margin-top: 12vh; }
+.palette-list { list-style: none; margin: 8px 0 0; padding: 0; max-height: 50vh; overflow: auto; }
+.palette-list li { display: flex; justify-content: space-between; gap: 10px; align-items: center; padding: 9px 10px; border-radius: 8px; cursor: pointer; }
+.palette-list li.on, .palette-list li:hover { background: var(--surface-2); outline: 1px solid var(--border-strong); }
+.palette-hint { margin: 8px 2px 0; }

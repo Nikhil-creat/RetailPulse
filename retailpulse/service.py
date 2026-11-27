@@ -117,6 +117,12 @@ class RetailPulseService:
     def monthly(self) -> dict:
         return self.named("monthly_revenue")
 
+    def insights(self) -> dict:
+        if "insights" not in self._cache:
+            from .brief import build_brief
+            self._cache["insights"] = build_brief(self)
+        return self._cache["insights"]
+
     def cohort(self) -> dict:
         if "cohort" not in self._cache:
             with contextlib.closing(connect(self.paths.db_path, readonly=True)) as conn:

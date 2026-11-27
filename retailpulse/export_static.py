@@ -102,6 +102,7 @@ def export(out_dir: str | Path, paths: config.Paths | None = None, web_dir: Path
         put("segments", svc.segments())
         put("cohort", svc.cohort())
         put("anomalies", svc.anomalies())
+        put("insights", svc.insights())
         put("basket", svc.basket(10))
         names = svc.named_list()
         put("named", {"queries": names})

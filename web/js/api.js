@@ -96,6 +96,7 @@ export async function refreshMe() {
 
 export const api = {
   kpis: () => get('v1/kpis', 'kpis'),
+  insights: () => get('v1/insights', 'insights'),
   summary: () => get('v1/summary', 'summary'),
   monthly: () => get('v1/monthly', 'monthly'),
   top: (dim, metric, n = 10) => get(`v1/top?dimension=${encodeURIComponent(dim)}&metric=${encodeURIComponent(metric)}&n=${n}`, `top_${dim}_${metric}`),

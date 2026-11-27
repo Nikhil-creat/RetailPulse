@@ -38,7 +38,7 @@ Read this before you put numbers on a resume or in an interview.
 - A custom domain needs a domain you own; none is configured. Until you set `SITE_URL`, canonical tags point at the GitHub Pages address.
 - `robots.txt` is only honoured by crawlers at the root of a host. On the GitHub Pages project address (`/RetailPulse/`) the file exists but crawlers will not read it; Cloudflare or a custom domain fixes that.
 - Structured data is written per page at build time. After in-app navigation the old page's JSON-LD is removed rather than left wrong, which is fine for crawlers (they fetch each URL fresh) but means it is absent during a single-page session.
-- Lighthouse, a formal accessibility audit and Search Console were **not** run here. What was checked: unique titles/descriptions, one `<h1>` per page, alt text, canonicals matching the sitemap, valid JSON-LD, working internal links, zero console errors/warnings in a headless browser on all nine pages at two URL depths, and no source maps. Rankings and "Core Web Vitals" scores were not measured.
+- Lighthouse, a formal accessibility audit and Search Console were **not** run here. What was checked: unique titles/descriptions, one `<h1>` per page, alt text, canonicals matching the sitemap, valid JSON-LD, working internal links, zero console errors/warnings in a headless browser on all ten pages at two URL depths, and no source maps. Rankings and "Core Web Vitals" scores were not measured.
 - "Bundle size" is already small (about 100 KB of JavaScript in 13 files, loaded per page, no bundler, no source maps); there was nothing large to reduce. A test fails if it grows past 120 KB.
 - The Cloudflare and GitHub Pages workflows have never run; the Cloudflare guide has not been followed on a real account.
 - The earlier v3.0.0/v3.1.0 commits on GitHub added a `src/retailpulse/` tree whose "CNN" was a hand-weighted formula over three numbers and whose "hybrid RAG" lacked abstention. They were not carried over under those names; the real classifier is `retailpulse/vision/` and the real retriever is `retailpulse/rag.py`.
@@ -49,3 +49,5 @@ Read this before you put numbers on a resume or in an interview.
 - The API uses Starlette (the framework underneath FastAPI) because FastAPI was not installable where this was built. Porting to FastAPI is mostly decorator changes; you would gain automatic OpenAPI docs.
 - The CI and Pages workflows have not run yet; they will on your first push. The Pages job rebuilds the full dataset (seed 42), so demo numbers match the README.
 - Role keys, rate limiting and the audit ledger are per-process and file-based; they suit one container, not a scaled-out deployment.
+
+- The scenario planner is an assumption-driven what-if model (constant elasticity, no competitor or mix effects). The executive brief is rule-based with fixed thresholds in `retailpulse/brief.py`; it is not a causal analysis.

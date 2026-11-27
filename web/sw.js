@@ -1,7 +1,7 @@
 // Service worker: makes the app shell installable and the static demo work offline.
 // It NEVER caches API responses (/v1/*, /health, /metrics): authorised data must not be stored on disk.
-const CACHE = 'retailpulse-shell-v3';
-const SHELL = ['css/app.css', 'js/main.js', 'js/api.js', 'js/util.js', 'js/ui.js', 'js/charts.js', 'pages.json',
+const CACHE = 'retailpulse-shell-v4';
+const SHELL = ['css/app.css', 'js/main.js', 'js/api.js', 'js/util.js', 'js/ui.js', 'js/charts.js', 'js/brief.js', 'js/palette.js', 'pages.json',
   'icons/icon.svg', 'icons/icon-192.png', 'favicon.ico', 'manifest.webmanifest'];
 
 self.addEventListener('install', (e) => {

@@ -2,6 +2,10 @@
 
 ## 3.2.0
 
+- Executive brief on the Overview: `GET /v1/insights` (`retailpulse/brief.py`) computes risks, opportunities and an outlook from warehouse queries, each with evidence, a recommended action and an "Ask the agent" deep link. Rule-based; no LLM involved.
+- Scenario planner page (`/scenario-planner/`): what-if profit model on a 12-month baseline with explicit assumptions and an elasticity sensitivity table.
+- Command palette (Ctrl/Cmd+K) for pages and actions.
+
 - Live mode for the static site: `--api-url`/`RP_API_URL` (meta `rp-api`, CSP `connect-src` allow-list), opt-in CORS via `RP_CORS_ORIGINS` (exact origins, no wildcard), "Demo data · sign in for live" state with no 401 console errors, Hugging Face Space deploy (`deploy/huggingface`, `tools/deploy_hf_space.sh`, `docs/DEPLOY_LIVE_BACKEND.md`).
 - Real page URLs (`/demand-forecast/`, `/ai-assistant/`, ...) with complete HTML per page: unique title, meta description, canonical, Open Graph/Twitter tags, one `<h1>`, breadcrumbs, JSON-LD (WebSite, WebApplication, Person, WebPage, BreadcrumbList), related-page links and alt text. Custom `404.html`. Old `#/page` links still work.
 - Crawler files: `sitemap.xml`, `robots.txt`, `llms.txt`, multi-size `favicon.ico`, nine 1200x630 social cards (`tools/make_social_images.py`).

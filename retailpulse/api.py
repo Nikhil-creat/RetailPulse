@@ -240,6 +240,10 @@ def create_app(paths: config.Paths | None = None, keys: ApiKeyStore | None = Non
     async def kpis(request, actor, role):
         return service().kpis()
 
+    @route("/v1/insights", "GET", "Executive brief: computed findings with evidence and recommended actions")
+    async def insights(request, actor, role):
+        return service().insights()
+
     @route("/v1/summary", "GET", "Pipeline summary: data, models, evals", tag="mlops")
     async def summary(request, actor, role):
         s = dict(service().summary())

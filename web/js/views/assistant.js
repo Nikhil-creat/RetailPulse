@@ -68,6 +68,9 @@ export async function render(root, { api, mode }) {
       busy = false; send.disabled = demo;
     }
   }
+  // Deep link from the executive brief: /ai-assistant/?q=... asks that question straight away (live backend only).
+  const preset = new URLSearchParams(location.search).get('q');
+  if (preset && !demo) setTimeout(() => ask(preset.slice(0, 500)), 0);
   send.addEventListener('click', () => ask(input.value));
   input.addEventListener('keydown', (e) => { if (e.key === 'Enter') ask(input.value); });
 

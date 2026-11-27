@@ -1,5 +1,6 @@
 import { barChart, chartCard, lineChart } from '../charts.js';
 import { banner, dataTable, errorBox, meter, pageHead, select, tile } from '../ui.js';
+import { briefCard } from '../brief.js';
 import { el, fmtINR, fmtInt, fmtMonth, fmtPct, titleCase } from '../util.js';
 
 const DIMS = [['category', 'Category'], ['city', 'City'], ['channel', 'Channel'], ['payment', 'Payment'], ['age_band', 'Age band'], ['product', 'Product']];
@@ -25,7 +26,7 @@ export async function render(root, { api, mode }) {
   const grid = el('div', { class: 'grid cols-2' });
   const hl = el('div', { class: 'card' });
   hl.append(el('h3', { style: { marginBottom: '10px' } }, 'Pipeline health'));
-  root.append(tiles, grid);
+  root.append(tiles, briefCard(api, mode), grid);
 
   try {
     const [k, monthly] = await Promise.all([api.kpis(), api.monthly()]);
